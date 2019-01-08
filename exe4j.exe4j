@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<exe4j version="6.0" transformSequenceNumber="2">
-  <directoryPresets config="C:/Program Files/Java" />
+<exe4j version="6.0.1" transformSequenceNumber="2">
+  <directoryPresets config="C:/Users/Wingser/Downloads" />
   <application name="花生照片" distributionSourceDir="D:/">
     <languages>
       <principalLanguage id="en" customLocalizationFile="" />
     </languages>
   </application>
-  <executable name="花生照片" type="2" iconSet="true" iconFile="E:/download/bitbug_favicon.ico" executableDir="." redirectStderr="true" stderrFile="error.log" stderrMode="overwrite" redirectStdout="false" stdoutFile="output.log" stdoutMode="overwrite" failOnStderrOutput="true" executableMode="1" changeWorkingDirectory="true" workingDirectory="." singleInstance="false" serviceStartType="2" serviceDependencies="" serviceDescription="" jreLocation="" executionLevel="asInvoker" checkConsoleParameter="false" globalSingleInstance="false" singleInstanceActivate="true" dpiAware="java9+" amd64="true">
+  <executable name="花生照片" type="2" iconSet="true" iconFile="D:/work/Wingser Proj/tool.ico" executableDir="." redirectStderr="true" stderrFile="error.log" stderrMode="overwrite" redirectStdout="false" stdoutFile="output.log" stdoutMode="overwrite" failOnStderrOutput="true" executableMode="1" changeWorkingDirectory="true" workingDirectory="." singleInstance="false" serviceStartType="2" serviceDependencies="" serviceDescription="" jreLocation="" executionLevel="asInvoker" checkConsoleParameter="false" globalSingleInstance="false" singleInstanceActivate="true" dpiAware="java9+" amd64="true">
     <messageSet />
     <versionInfo include="false" fileVersion="" fileDescription="" legalCopyright="" internalName="" productName="" companyName="" productVersion="" />
   </executable>
@@ -24,7 +24,7 @@
       <directory location="C:/Program Files/Java/jre7" />
     </searchSequence>
     <classPath>
-      <archive location="C:/Users/Administrator/Downloads/wingser.jar" failOnError="true" />
+      <archive location="C:/Users/Wingser/Downloads/wingser.jar" failOnError="true" />
     </classPath>
     <modulePath />
     <nativeLibraryDirectories />

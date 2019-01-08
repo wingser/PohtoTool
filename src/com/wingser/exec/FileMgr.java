@@ -10,7 +10,6 @@ import java.nio.file.attribute.BasicFileAttributeView;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -117,7 +116,7 @@ public class FileMgr {
 	public String getNewName(File oldFile, int iShiftingTime, SimpleDateFormat sdf) {
 
 		String newName = "";
-		Date date = null;
+		DateNameBean dateNameBean = new DateNameBean();
 		// 读取拍摄时间
 		try {
 			Metadata metadata = null;
@@ -125,33 +124,37 @@ public class FileMgr {
 				// 如果是MP4视频
 				// 从文件名解析。从修改时间解析，从创建时间解析。解析不到拍摄时间，会走异常处理逻辑。
 				// metadata = Mp4MetadataReader.readMetadata(oldFile);
-				date = getGuessTime(oldFile);
+				dateNameBean = getGuessTime(oldFile);
 			} else {
 				// 图片
 				metadata = ImageMetadataReader.readMetadata(oldFile);
 				ExifSubIFDDirectory directory = metadata.getFirstDirectoryOfType(ExifSubIFDDirectory.class);
 				if (directory == null) {
-					date = getGuessTime(oldFile);
+					dateNameBean = getGuessTime(oldFile);
 				} else {
-					date = directory.getDateOriginal(TimeZone.getDefault());
+					dateNameBean.setDate(directory.getDateOriginal(TimeZone.getDefault()));
 				}
-				if (date == null) {
-					date = getGuessTime(oldFile);
+				if (dateNameBean.getDate() == null) {
+					dateNameBean = getGuessTime(oldFile);
 				}
 			}
 			
 			//处理时间偏移
-			date = new Date(date.getTime()+iShiftingTime);
+			dateNameBean.setDate(new Date(dateNameBean.getDate().getTime()+iShiftingTime));
 							
-			newName = sdf.format(date);
-			newName += oldFile.getName().substring(oldFile.getName().indexOf("."));
+			newName = sdf.format(dateNameBean.getDate());
+			if (!dateNameBean.getSrcType().isEmpty()) {
+				//微信来源，文件名扩展wx标记
+				newName += "_wx";
+			}
+			newName += oldFile.getName().substring(oldFile.getName().lastIndexOf("."));
 
 		} catch (Exception e) {
 			System.err.println(e);
 			// 无法解析拍摄时间，mp4，或者是没有拍摄时间属性，通过文件名,修改及创建时间猜测
 			try {
-				date = getGuessTime(oldFile);
-				newName = sdf.format(date);
+				dateNameBean = getGuessTime(oldFile);
+				newName = sdf.format(dateNameBean.getDate());
 				newName += oldFile.getName().substring(oldFile.getName().indexOf("."));
 				System.err.println(oldFile.getName() + "  to  " + newName);
 			} catch (Exception e1) {
@@ -160,12 +163,16 @@ public class FileMgr {
 		return newName;
 	}
 
-	private Date getGuessTime(File oldFile) throws Exception {
+	private DateNameBean getGuessTime(File oldFile) throws Exception {
 
-		Date date = null;
+		DateNameBean dateNameBean = new DateNameBean();
 		/*
-		 * 1. 文件名时间 支持如下日期格式 VID_20170909_134921.mp4 IMG_20171008_122021.jpg
-		 * 1498410520375.mp4 mmexport1488815760605.jpg 微信图片_201710111235022.jpg
+		 * 1. 文件名时间 支持如下日期格式 
+		 * VID_20170909_134921.mp4 
+		 * IMG_20171008_122021.jpg
+		 * 1498410520375.mp4 
+		 * mmexport1488815760605.jpg 
+		 * 微信图片_201710111235022.jpg
 		 */
 		Date fileNameTime = null;
 		if (oldFile.getName().length() == 23
@@ -178,6 +185,7 @@ public class FileMgr {
 			// 微信图片_201710111235022.jpg
 			SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddkkmmss");
 			fileNameTime = dateFormat.parse(oldFile.getName().substring(5));
+			dateNameBean.setSrcType("wx");
 		} else {
 			// 微信文件名处理
 			String fileNo = oldFile.getName().toLowerCase().replaceAll(".mp4", "").replaceAll("[^0-9]", "");
@@ -186,9 +194,10 @@ public class FileMgr {
 				// mmexport1488815760605.jpg
 				Long ltime = Long.parseLong(fileNo.substring(0, 13));
 				fileNameTime = new Date(ltime);
+				dateNameBean.setSrcType("wx");
 			}
 		}
-		date = fileNameTime;
+		dateNameBean.setDate(fileNameTime);
 
 		/*
 		 * 2. 获取文件创建时间及文件修改时间。
@@ -203,13 +212,15 @@ public class FileMgr {
 		attr = basicview.readAttributes();
 		createTime = new Date(attr.creationTime().toMillis());
 
-		if (date.after(modTime)) {
-			date = modTime;
+		if (dateNameBean.getDate().after(modTime)) {
+			dateNameBean.setDate(modTime);
+			dateNameBean.setSrcType("");
 		}
-		if (date.after(createTime)) {
-			date = createTime;
+		if (dateNameBean.getDate().after(createTime)) {
+			dateNameBean.setDate(createTime);
+			dateNameBean.setSrcType("");
 		}
-		return date;
+		return dateNameBean;
 	}
 
 
@@ -234,9 +245,10 @@ public class FileMgr {
 		int i = 0;
 		while (newFile.exists() && i++ < 100) {
 			if (newFile.getName().contains(".")) {
+				// 截取文件名，不带扩展名，去掉之间旧（n）
 				String newName = newFile.getName().substring(0, newFile.getName().lastIndexOf("."))
-						.replace("(" + (i - 1) + ")", "") // 截取文件名，不带扩展名，去掉之间旧（n）
-						+ "(" + i + ")" + newFile.getName().substring(newFile.getName().lastIndexOf("."));
+						.replace("(" + (i - 1) + ")", "(" + i + ")") 
+						+ newFile.getName().substring(newFile.getName().lastIndexOf("."));
 				newFile = new File(newFile.getAbsolutePath().replace(newFile.getName(), newName));
 				;
 			}
