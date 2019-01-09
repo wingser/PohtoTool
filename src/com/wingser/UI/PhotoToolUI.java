@@ -109,7 +109,7 @@ public class PhotoToolUI {
 
 		//设置图标（左上角）
 		try {
-			Image img = ImageIO.read(this.getClass().getResource("/pic/花生.png"));
+			Image img = ImageIO.read(this.getClass().getResource("/pic/Zoey.JPG"));
 			frame.setIconImage(img);
 		} catch (Exception e2) {
 		}
@@ -632,7 +632,7 @@ public class PhotoToolUI {
 							data[i][3] = newFilePath;// 路径
 						} catch (Exception e) {
 							//重命名失败
-							data[i][1] = tmpFile.getName();
+							data[i][1] = "";
 							data[i][2] = "错误";// 状态
 							data[i][3] = e.getMessage();
 						}

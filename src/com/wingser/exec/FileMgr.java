@@ -119,15 +119,15 @@ public class FileMgr {
 		DateNameBean dateNameBean = new DateNameBean();
 		// 读取拍摄时间
 		try {
-			Metadata metadata = null;
 			if (oldFile.getName().toLowerCase().contains("mp4")) {
 				// 如果是MP4视频
 				// 从文件名解析。从修改时间解析，从创建时间解析。解析不到拍摄时间，会走异常处理逻辑。
 				// metadata = Mp4MetadataReader.readMetadata(oldFile);
 				dateNameBean = getGuessTime(oldFile);
-			} else {
+				
+			} else if (FileUtil.isPic(oldFile)) {
 				// 图片
-				metadata = ImageMetadataReader.readMetadata(oldFile);
+				Metadata metadata = ImageMetadataReader.readMetadata(oldFile);
 				ExifSubIFDDirectory directory = metadata.getFirstDirectoryOfType(ExifSubIFDDirectory.class);
 				if (directory == null) {
 					dateNameBean = getGuessTime(oldFile);
@@ -139,17 +139,21 @@ public class FileMgr {
 				}
 			}
 			
-			//处理时间偏移
-			dateNameBean.setDate(new Date(dateNameBean.getDate().getTime()+iShiftingTime));
-							
-			newName = sdf.format(dateNameBean.getDate());
-			if (!dateNameBean.getSrcType().isEmpty()) {
-				//微信来源，文件名扩展wx标记
-				newName += "_wx";
+			if (dateNameBean.getDate() != null) {
+				//处理时间偏移
+				dateNameBean.setDate(new Date(dateNameBean.getDate().getTime()+iShiftingTime));
+				newName = sdf.format(dateNameBean.getDate());
+				if (!dateNameBean.getSrcType().isEmpty()) {
+					//微信来源，文件名扩展wx标记
+					newName += "_wx";
+				}
+				//加文件扩展名
+				newName += oldFile.getName().substring(oldFile.getName().lastIndexOf("."));
 			}
-			newName += oldFile.getName().substring(oldFile.getName().lastIndexOf("."));
+							
 
 		} catch (Exception e) {
+			e.printStackTrace();
 			System.err.println(e);
 			// 无法解析拍摄时间，mp4，或者是没有拍摄时间属性，通过文件名,修改及创建时间猜测
 			try {
@@ -174,7 +178,7 @@ public class FileMgr {
 		 * mmexport1488815760605.jpg 
 		 * 微信图片_201710111235022.jpg
 		 */
-		Date fileNameTime = null;
+		Date fileNameTime = new Date();
 		if (oldFile.getName().length() == 23
 				&& (oldFile.getName().startsWith("VID") || oldFile.getName().startsWith("VID"))) {
 			// VID_20170909_134921.mp4
@@ -214,11 +218,9 @@ public class FileMgr {
 
 		if (dateNameBean.getDate().after(modTime)) {
 			dateNameBean.setDate(modTime);
-			dateNameBean.setSrcType("");
 		}
 		if (dateNameBean.getDate().after(createTime)) {
 			dateNameBean.setDate(createTime);
-			dateNameBean.setSrcType("");
 		}
 		return dateNameBean;
 	}
@@ -231,6 +233,10 @@ public class FileMgr {
 			throw new Exception("源文件不存在！");
 		}
 
+		if (newFile.isDirectory()) {
+			throw new Exception("文件名非法！");
+		}
+		
 		// 文件名已经符合标准，不用修改了。
 		if (file.getAbsolutePath().equalsIgnoreCase(newFilePath)) {
 			return newFile.getName();
