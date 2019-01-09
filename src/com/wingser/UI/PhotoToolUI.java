@@ -15,6 +15,8 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.prefs.BackingStoreException;
+import java.util.prefs.Preferences;
 
 import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
@@ -484,7 +486,14 @@ public class PhotoToolUI {
 		renamePanel.add(lblWingserPhotoRenamer);
 
 		final JFileChooser jfcWingserPhotoRenamer = new JFileChooser();
-		jfcWingserPhotoRenamer.setCurrentDirectory(new File("D://"));
+		// get last file path
+		final Preferences pref = Preferences.userNodeForPackage(PhotoToolUI.class);
+		String lastPath = pref.get("lastPath", "");
+		if (!lastPath.equals("")) {
+			jfcWingserPhotoRenamer.setCurrentDirectory(new File(lastPath));
+		} else {
+			jfcWingserPhotoRenamer.setCurrentDirectory(new File("D://"));
+		}
 
 		JLabel label = new JLabel("选择文件或文件夹：");
 		label.setBounds(10, 48, 125, 30);
@@ -501,11 +510,19 @@ public class PhotoToolUI {
 		JButton button = new JButton("选择文件");
 		button.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				jfcWingserPhotoRenamer.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);// 设定只能选择到文件夹
+				jfcWingserPhotoRenamer.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);// 可以选择文件或文件夹
 				int state = jfcWingserPhotoRenamer.showOpenDialog(null);// 此句是打开文件选择器界面的触发语句
 				if (state == 1) {
 				} else {
 					File f = jfcWingserPhotoRenamer.getSelectedFile();// f为选择到的目录
+					//选择目录保存到注册表
+					try {
+						pref.put("lastPath", f.getParentFile().getPath());
+						pref.flush();
+					} catch (BackingStoreException e) {
+						e.printStackTrace();
+					}
+
 					renameTextField.setText(f.getAbsolutePath());
 					// 更新日期格式化
 					setTimeFormater();
