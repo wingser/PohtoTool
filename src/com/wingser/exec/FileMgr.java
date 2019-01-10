@@ -252,9 +252,10 @@ public class FileMgr {
 		while (newFile.exists() && i++ < 100) {
 			if (newFile.getName().contains(".")) {
 				// 截取文件名，不带扩展名，去掉之间旧（n）
-				String newName = newFile.getName().substring(0, newFile.getName().lastIndexOf("."))
-						.replace("(" + (i - 1) + ")", "(" + i + ")") 
-						+ newFile.getName().substring(newFile.getName().lastIndexOf("."));
+				String newName = newFile.getName().substring(0, newFile.getName().lastIndexOf(".")).replace("(" + (i - 1) + ")", "") 	//去掉旧（n），没有也不影响
+						+ "(" + i + ")"																									//加上新（n）
+						+ newFile.getName().substring(newFile.getName().lastIndexOf("."));												//拼接扩展名
+				
 				newFile = new File(newFile.getAbsolutePath().replace(newFile.getName(), newName));
 				;
 			}
